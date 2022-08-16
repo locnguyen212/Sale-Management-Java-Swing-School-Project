@@ -1,0 +1,1354 @@
+DROP DATABASE IF EXISTS [saleManagementDb]
+CREATE DATABASE [saleManagementDb]
+GO
+
+USE [saleManagementDb]
+GO
+
+--
+--
+--CREATE TABLE
+--
+--
+
+CREATE TABLE product_name
+(
+id INT IDENTITY,
+[name] NVARCHAR(200),
+created_at DATETIME,
+updated_at DATETIME,
+deleted_at DATETIME,
+CONSTRAINT PK_product_name PRIMARY KEY (id)
+)
+GO
+
+CREATE TABLE category
+(
+id INT IDENTITY,
+[name] NVARCHAR(200),
+created_at DATETIME,
+updated_at DATETIME,
+deleted_at DATETIME,
+CONSTRAINT PK_category PRIMARY KEY (id)
+)
+GO
+
+CREATE TABLE product
+(
+id INT IDENTITY,
+category_id INT,
+product_name_id INT,
+quantity INT,
+quantity_sold INT,
+is_available BIT,
+buy_price INT,
+price INT,
+information NVARCHAR(1000),
+created_at DATETIME,
+updated_at DATETIME,
+deleted_at DATETIME,
+CONSTRAINT PK_product PRIMARY KEY (id),
+CONSTRAINT FK_product_product_name FOREIGN KEY (product_name_id) REFERENCES product_name(id),
+CONSTRAINT FK_product_category FOREIGN KEY (category_id) REFERENCES category(id)
+)
+
+CREATE TABLE staff
+(
+id INT IDENTITY,
+[name] NVARCHAR(200),
+[level] INT,
+[password] NVARCHAR(200),
+created_at DATETIME,
+updated_at DATETIME,
+deleted_at DATETIME,
+CONSTRAINT PK_staff PRIMARY KEY (id)
+)
+GO
+
+CREATE TABLE [order]
+(
+id INT IDENTITY,
+staff_id INT,
+order_number INT,
+created_at DATETIME,
+updated_at DATETIME,
+CONSTRAINT PK_order PRIMARY KEY (id),
+CONSTRAINT FK_order_staff FOREIGN KEY (staff_id) REFERENCES staff(id)
+)
+GO
+
+CREATE TABLE order_detail
+(
+id INT IDENTITY,
+order_id INT,
+product_id INT,
+quantity INT,
+created_at DATETIME,
+updated_at DATETIME,
+CONSTRAINT PK_order_detail PRIMARY KEY (id),
+CONSTRAINT FK_order_detail_order FOREIGN KEY (order_id) REFERENCES [order](id),
+CONSTRAINT FK_order_detail_product FOREIGN KEY (product_id) REFERENCES product(id)
+)
+GO
+
+CREATE TABLE properties
+(
+id INT IDENTITY,
+[name] NVARCHAR(200),
+parent_id INT,
+created_at DATETIME,
+updated_at DATETIME,
+deleted_at DATETIME,
+CONSTRAINT PK_properties PRIMARY KEY (id)
+)
+GO
+
+CREATE TABLE product_properties
+(
+id INT IDENTITY,
+product_id INT,
+properties_id INT,
+created_at DATETIME,
+updated_at DATETIME,
+deleted_at DATETIME,
+CONSTRAINT PK_product_properties PRIMARY KEY (id),
+CONSTRAINT FK_product_properties_product FOREIGN KEY (product_id) REFERENCES product(id),
+CONSTRAINT FK_product_properties_properties FOREIGN KEY (properties_id) REFERENCES properties(id)
+)
+GO
+
+CREATE TABLE [image]
+(
+id INT IDENTITY,
+product_name_id INT,
+[name] NVARCHAR(200),
+created_at DATETIME,
+updated_at DATETIME,
+deleted_at DATETIME,
+CONSTRAINT PK_image PRIMARY KEY (id),
+CONSTRAINT FK_image_product_name FOREIGN KEY (product_name_id) REFERENCES product_name(id)
+)
+GO
+
+--
+--
+--INSERT SP
+--
+--
+
+CREATE PROC insertProductName
+@name NVARCHAR(200)
+AS
+BEGIN
+	INSERT INTO product_name
+	([name], created_at)
+	VALUES
+	(@name, GETDATE())
+END
+GO
+
+CREATE PROC insertProduct
+@category_id INT,
+@product_name_id INT,
+@quantity INT,
+@is_available BIT,
+@buy_price INT,
+@price INT,
+@information NVARCHAR(1000)
+AS
+BEGIN
+	INSERT INTO product
+	(category_id, product_name_id, quantity, quantity_sold, is_available, buy_price, price, information, created_at)
+	VALUES
+	(@category_id, @product_name_id, @quantity, 0, @is_available, @buy_price, @price, @information, GETDATE())
+END
+GO
+
+CREATE PROC insertStaff
+@name NVARCHAR(200),
+@level INT,
+@password NVARCHAR(200)
+AS
+BEGIN
+	INSERT INTO staff
+	([name], [level], [password], created_at)
+	VALUES
+	(@name, @level, @password, GETDATE())
+END
+GO
+
+CREATE PROC insertOrder
+@staff_id INT,
+@order_number INT
+AS
+BEGIN
+	INSERT INTO [order]
+	(staff_id, order_number, created_at)
+	VALUES
+	(@staff_id, @order_number, GETDATE())
+END
+GO
+
+CREATE PROC insertOrderDetail
+@order_id INT,
+@product_id INT,
+@quantity INT
+AS
+BEGIN
+	INSERT INTO order_detail
+	(order_id, product_id, quantity, created_at)
+	VALUES
+	(@order_id, @product_id, @quantity, GETDATE())
+END
+GO
+
+CREATE PROC insertCategory
+@name NVARCHAR(200)
+AS
+BEGIN
+	INSERT INTO category
+	([name], created_at)
+	VALUES
+	(@name, GETDATE())
+END
+GO
+
+CREATE PROC insertProperties
+@name NVARCHAR(200),
+@parent_id INT
+AS
+BEGIN
+	INSERT INTO properties
+	([name], parent_id, created_at)
+	VALUES
+	(@name, @parent_id, GETDATE())
+END
+GO
+
+CREATE PROC insertProductProperties
+@product_id INT,
+@properties_id INT
+AS
+BEGIN
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(@product_id, @properties_id, GETDATE())
+END
+GO
+
+CREATE PROC insertImage
+@product_name_id INT,
+@name NVARCHAR(200)
+AS
+BEGIN
+	INSERT INTO [image]
+	(product_name_id, [name], created_at)
+	VALUES
+	(@product_name_id, @name, GETDATE())
+END
+GO
+
+--
+--
+--UPDATE SP
+--
+--
+
+CREATE PROC updateProductName
+@name NVARCHAR(200),
+@id INT
+AS
+BEGIN
+	UPDATE product_name
+	SET [name] = @name, updated_at = GETDATE()
+	WHERE id = @id
+END
+GO
+
+CREATE PROC updateProduct
+@category_id INT,
+@product_name_id INT,
+@quantity INT,
+@quantity_sold INT,
+@is_available BIT,
+@buy_price INT,
+@price INT,
+@information NVARCHAR(1000),
+@id INT
+AS
+BEGIN
+	UPDATE product
+	SET category_id = @category_id, product_name_id = @product_name_id, quantity = @quantity, quantity_sold = @quantity_sold, is_available = @is_available, buy_price = @buy_price, price = @price, information = @information, updated_at = GETDATE()
+	WHERE id = @id
+END
+GO
+
+CREATE PROC updateProductQuantitySold
+@quantity_sold INT, 
+@id INT
+AS
+BEGIN
+	UPDATE product
+	SET quantity_sold = @quantity_sold, updated_at = GETDATE()
+	WHERE id = @id
+END
+GO
+
+CREATE PROC updateStaff
+@name NVARCHAR(200),
+@level INT,
+@password NVARCHAR(200),
+@id INT
+AS
+BEGIN
+	UPDATE staff
+	SET [name] = @name, [level] = @level, [password] = @password, updated_at = GETDATE()
+	WHERE id = @id
+END
+GO
+
+CREATE PROC updateOrder
+@order_number INT,
+@id INT
+AS
+BEGIN
+	UPDATE [order]
+	SET [order_number] = @order_number, updated_at = GETDATE()
+	WHERE id = @id
+END
+GO
+
+CREATE PROC updateOrderDetail
+@order_id INT,
+@product_id INT,
+@quantity INT,
+@id INT
+AS
+BEGIN
+	UPDATE order_detail
+	SET order_id = @order_id, product_id = @product_id, quantity = @quantity, updated_at = GETDATE()
+	WHERE id = @id
+END
+GO
+
+CREATE PROC updateCategory
+@name NVARCHAR(200),
+@id INT
+AS
+BEGIN
+	UPDATE category
+	SET [name] = @name, updated_at = GETDATE()
+	WHERE id = @id
+END
+GO
+
+CREATE PROC updateProperties
+@name NVARCHAR(200),
+@parent_id INT,
+@id INT
+AS
+BEGIN
+	UPDATE properties
+	SET [name] = @name, parent_id = @parent_id, updated_at = GETDATE()
+	WHERE id = @id
+END
+GO
+
+CREATE PROC updateProductProperties
+@product_id INT,
+@properties_id INT,
+@id INT
+AS
+BEGIN
+	UPDATE product_properties
+	SET product_id = @product_id, properties_id = @properties_id, updated_at = GETDATE()
+	WHERE id = @id
+END
+GO
+
+CREATE PROC updateImage
+@product_name_id INT,
+@name NVARCHAR(200),
+@id INT
+AS
+BEGIN
+	UPDATE [image]
+	SET product_name_id = @product_name_id, [name] = @name, updated_at = GETDATE()
+	WHERE id = @id
+END
+GO
+
+--
+--
+--DELETE SP
+--
+--
+
+CREATE PROC deleteStatement
+@tableName NVARCHAR(200),
+@id INT
+AS
+BEGIN
+	EXEC('UPDATE [' + @tableName + ']' + ' SET deleted_at = GETDATE() WHERE id = ' + @id)
+END
+GO
+
+--
+--
+-- INSERT DATA
+--
+--
+
+INSERT INTO category([name], created_at) VALUES ('Laptop Gaming',GETDATE())
+INSERT INTO category([name], created_at) VALUES ('Laptop Van Phong',GETDATE())
+INSERT INTO category([name], created_at) VALUES ('Apple',GETDATE())
+INSERT INTO category([name], created_at) VALUES ('PC Gaming-Do Hoa',GETDATE())
+INSERT INTO category([name], created_at) VALUES ('PC Doanh Nghiep',GETDATE())
+INSERT INTO category([name], created_at) VALUES ('Loa Tai Nghe',GETDATE())
+INSERT INTO category([name], created_at) VALUES ('Thiet Bi Mang',GETDATE())
+
+INSERT INTO product_name([name], created_at) VALUES ('Legion Gaming',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('GIGABYTE Gaming',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('MSI Gaming',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('DELL Gaming',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('ACER|PREDATOR Gaming',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('MSI MODERN 14',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('ASUS VIVOBOOK',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('ACER ASPIRE 3',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('MSI MODERN 15',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('LENOVO THINKBOOK 14',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('HUAWEI MATEBOOK 14',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('DELL VOSTRO 3400',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('MACBOOK AIR M1 13"',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('MACBOOK PRO M1 14"',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('IMAC 21 2021',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('MAC MINI M1 ',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('GVN MINION i1650 ',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('GVN VIPER i2060 ',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('GVN VIPER PLUS i3060 ',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('GVN PHANTOM i2060 ',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('GVN MINION PLUS i3070 ',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('GVN Homework Athlon',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('GVN Homework Pentium ',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('GVN Homework i3 ',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('GVN Homework i5 ',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('May bo Intel NUC ',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('HP ProDesk 400 ',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('Asus Mini PC ',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('Tai nghe Logitech G335  ',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('Tai nghe Logitech G435 Lightspeed Wireless White ',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('Tai nghe Logitech G733 LIGHTSPEED Wireless Black',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('Tai nghe Logitech G Pro X League Of Legends',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('Tai nghe Razer Kraken V3 X USB',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('Tai nghe Steelseries Arctis Prime',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('ASUS RT-N12+ Chuẩn N300',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('Bo dinh tuyen MESH WiFi 5 TP-Link Deco E4 (2 pack) chuẩn AC1200',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('Bo dinh tuyen WiFi 6 Asus RT-AX1800HP chuẩn AX1800',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('WiFi 6 Asus RT-AX30000',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('WiFi 6 Asus RT-AX82U Gundam Edition',GETDATE())
+INSERT INTO product_name([name], created_at) VALUES ('WiFi 6 Asus RT-AX53U',GETDATE())
+
+
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Brand',null,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Chip',null,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Card Đồ Họa',null,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Main',null,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Ram',null,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('O Cung',null,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('PSU',null,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Tan Nhiet',null,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Case',null,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Ket Noi',null,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('ASUS',1,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('DELL',1,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('logitech',1,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('lenovo',1,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Gigabye',1,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('MSI',1,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('HP',1,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Steelseries',1,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Corsair',1,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Huawei',1,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Intel Core i3',2,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Intel Core i5',2,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Intel Core i7',2,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('GTX 1650',3,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('GTX 3050/ 3050Ti',3,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('GTX 3070/ 3080',3,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('RTX Ampere 3080',3,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Intel H610',4,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Intel H510',4,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Chip M1',4,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Intel B660',4,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('RAM DDR5',4,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('RAM 4G - DDR4',4,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('RAM 16G - DDR4',4,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('RAM CORSAIR',4,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('RAM KINGSTON',4,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('SSD 240G - 256G',5,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('SSD 120G - 128G',5,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('SSD 480G - 512G',5,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('HHD 1TB',5,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('HHD Seagate',5,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Nguon Trên 1000W',6,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Nguon Trên 700-850W',5,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Nguon SFX',5,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Nguon Corsair',5,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Nguon Cooler Master',5,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Tan Nhiet Khi',5,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Tan Nhiet AIO 240mm',5,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Tan Nhiet AIO 360mm',5,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Tan Nhiet AIO 480mm',5,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Case Corsair',6,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Case Lian Li',6,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Case NXZT',6,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Case DeepCool',6,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('Bluetooth +Wireless',6,GETDATE())
+INSERT INTO properties([name], parent_id, created_at)  VALUES ('3.5mm ',6,GETDATE())
+
+
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (1,1,50,20,0,40000000,44000000,'Lenovo Legion 5 là một trong dòng laptop gaming đình đám của nhà Lenovo. Nếu bạn đang tìm kiếm một chiếc laptop vừa xử lý nhanh chóng các tác vụ công việc hằng ngày vừa chiến được mọi tựa game cực căng thì bạn không nên bỏ qua Lenovo Legion 5 15ARH7H 82RD004UVN nhé. Với thiết kế bắt mắt và hiệu năng siêu khủng, Lenovo Legion 5 hứa hẹn gây bão cộng đồng game thủ thời gian sắp tới.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (1,2,30,20,0,19000000,22000000,'GIGABYTE G5 MD 51S1123SO được mang đến thị trường không chỉ mang đến nhiệm vụ giải trí mà còn sở hữu tính “đa nhiệm”. Một trong những dòng máy tính xách tay G series ra đời không chỉ để chơi game mà còn mang đến sự cân bằng tuyệt vời giữa khả năng giải trí và làm việc. Đây được xem là đối thủ xứng tầm với các dòng sản phẩm mỏng nhẹ đến từ HP Victus và HP Omen dòng sản phẩm máy tính HP Gaming.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (1,3,50,25,0,40000000,49000000,'Một trong những chiếc laptop gaming hàng đầu thu hút thành công sự chú ý của các game thủ đó là MSI Vector GP76 12UGS 644VN. Thiết kế mạnh mẽ, cấu hình đỉnh cao hỗ trợ mọi nhu cầu chơi game cấu hình nặng đồng thời tạo điều kiện để các nhà sáng tạo làm thiết kế đồ họa. ',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (1,4,50,15,0,28000000,32000000,'Laptop gaming Dell G15 5511 P105F006 70283448 là sản phẩm nằm trong phân khúc laptop gaming trên 30 triệu và là thế hệ chơi game tiếp theo của Dell. Vốn nổi tiếng với những chiếc laptop văn phòng thì nay Dell mang đến cho game thủ một lựa chọn mới đầy tính năng, cấu hình mạnh mẽ và đương đầu với vô số tựa game dễ dàng',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (1,5,50,15,0,13000000,15490000,'Acer Aspire 7 2020 A715 42G tích hợp card đồ họa NVIDIA GTX1650 4GB GDDR6, là laptop chơi game tốt nhất phân khúc. ',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (2,6,50,15,0,11000000,12790000,'Laptop MSI Modern 14 B5M 202VN có thiết kế màu xám carbon kết hợp cùng kiểu dáng tối giản, mỏng nhẹ tạo nên vẻ đẹp cổ điển, thanh lịch đặc trưng của dòng MSI Modern. Máy chỉ có cân nặng 1.3kg thuận tiện cho những ai thường xuyên thay đổi vị trí làm việc.Các đường nét của máy được thiết kế chỉnh chu, tinh tế đến từng chi tiết giúp tạo cảm hứng làm việc và giải trí cho người dùng.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (2,7,50,15,0,30000000,37990000,'ASUS Vivobook Pro 14X OLED N7401ZE M9028W mang đến trải nghiệm màn hình OLED cực đỉnh với hiệu năng nổi trội. Nếu bạn đang cần một chiếc máy tính xách tay có tính di động cao mà vẫn đáp ứng mọi nhu cầu học tập, làm việc hay thậm chí là chơi game tốt thì đừng bỏ qua sản phẩm VivoBook Pro 14X này nhé!',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (2,8,50,15,0,10000000,12990000,'Sở hữu thiết kế quen thuộc của những sản phẩm trước đó trong dòng Acer Aspire 3, A315 58 358E được hoàn thiện với những chi tiết được bo tròn thân thiện với người dùng kèm mặt A được lấy trung tâm là logo Acer ánh bạc. Khoác lên lớp màu bạc sáng bóng và sang trọng, A315 58 358E sẽ là người bạn đồng hành tuyệt vời khi mang đi học và làm việc, dễ dàng cất vào trong balo với trọng lượng chỉ vỏn vẹn 1.7kg.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (2,9,50,15,0,9000000,14990000,'Với thiết kế tinh tế, sang trọng, laptop MSI Modern 15 A11M 1024VN là sự lựa chọn hàng đầu của giới trẻ, giúp mang đến một vẻ ngoài siêu nổi bật và tràn đầy cá tính. Máy mỏng nhẹ có điểm nhấn thiết kế độc đáo. Thể hiện cá tính độc đáo của bạn với hiệu năng không giới hạn.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (2,10,50,15,0,23000000,26790000,'Laptop là một trong những công cụ hỗ trợ trong công việc cũng như học tập hằng ngày của người dùng. LENOVO ThinkBook 14s G2 ITL 20VA003RVN nằm trong phân khúc laptop trên 20 triệu sở hữu thiết kế mỏng nhẹ, sang trọng cùng cấu hình mạnh đáp ứng mọi nhu cầu. Nếu bạn đang tìm kiếm một sản phẩm laptop cho việc học hay công việc văn phòng thì đây là lựa chọn không thể bỏ qua. ',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (2,11,50,15,0,20000000,25990000,'Laptop Huawei Matebook 14 KLVF W5651T là một siêu phẩm mới của nhà Huawei. Matebook 14 KLVF W5651T có sự trở lại ấn tượng với một thiết kế siêu mỏng, hiện đại. Hiệu năng cũng vô cùng ấn tượng khi được trang bị bộ vi xử lý thế hệ mới cùng với bộ lưu trữ 16GB RAM tiêu chuẩn hứa hẹn mang đến trải nghiệm tốt nhất cho người dùng.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (2,12,50,15,0,18000000,22490000,'Laptop Dell Vostro 3400 V4I7015W1 Black sở hữu sức mạnh siêu khủng từ CPU thế hệ thứ 11 để đáp ứng mọi nhu cầu của người dùng. Với thiết kế đơn giản, hiện đại và tinh tế, Dell Vostro 3400 hướng đến đối tượng người dùng cơ bản như dân văn phòng, học sinh sinh viên. Sự kết hợp giữa card đồ họa, bộ vi xử lý thế hệ mới và ổ cứng lưu trữ lớn giúp mang đến trải nghiệm hoàn toàn mới cho người dùng.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (3,13,50,15,0,29000000,34990000,'Trong cùng 1 năm MacBook Air 2020 mới được Apple nâng cấp ra mắt với sự xuất hiện của con Chip Apple M1 được phát triển với kiến trúc ARM mới, nhanh hơn 98% PC, pin 18 giờ. Đây là chiếc MacBook Air đầu tiên và cũng là chiếc máy Mac đầu tiên của Apple trong việc chuyển dịch sang hệ chip ARM. ',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (3,14,50,15,0,30000000,38590000,'MacBook Pro 13 M2 10GPU 16GB 256GB Space Gray là một trong những dòng sản phẩm mới nhất được Apple cố bố trong thời gian gần đây. Phiên bản được nâng cấp về thiết kế cũng như chip xử lý M2 giúp người dùng có thể cảm nhận thấy hiệu năng hoạt động xử lý công việc vượt trội, mức tiêu thụ điện thấp,...',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (3,15,50,15,0,40000000,45690000,'iMac là thiết bị màn hình máy tính nhưng lại được tích hợp với hệ thống CPU. Với thiết kế tinh tế, sang trọng nhưng lại hoạt động vô cùng mạnh mẽ, iMac sẽ mang đến cảm hứng làm việc cho người dùng đang cần một góc máy gọn gàng nhờ vào tính năng tiết kiệm được tối đa khoảng trống.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (3,16,50,15,0,30000000,34990000,'Là chiếc mini PC đến từ thương hiệu Apple, Mac Mini M1 8GPU 16GB 1TB Z12P000HM đem đến cho người dùng một lựa chọn mới trong việc sử dụng máy tính mini. Với 19.7cm cho cả chiều rộng và chiều ngang, bạn có thể đặt Mac Mini M1 ở bất kì vị trí nào ở trên không gian làm việc. Khoác lên lớp màu bạc sang trọng và logo quả táo khẳng định lên đẳng cấp của chiếc Mac Mini M1. Chất liệu chủ yếu từ hợp kim nhôm tái chế giúp Apple nâng cao khẩu hiệu bảo vệ môi trường.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (4,17,50,15,0,8000000,11690000,'Mainboard MSI H510M Pro-E sẽ là cầu nối tất cả linh kiện trong chiếc GVN MINION i1650. Là chiếc bo mạch chủ giá rẻ sở hữu socket LGA 1200 cho khả năng tương thích tốt với nhiều bộ vi xử lý hiện nay như Intel Gen 10 và tận dụng tối đa sức mạnh cho hiệu năng xử lý tốt nhất.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (4,18,50,15,0,13000000,18990000,'CPU Intel Core i5-12400F, nhân tố khuất đảo thị trường PC Gaming khi sở hữu mức giá rẻ cùng hiệu năng xuất sắc. Với 6 nhân 12 luồng, xung nhịp 2.5GHz và turbo boost lên 4.4GHz, quả là sự lựa chọn tuyệt vời từ khả năng chơi game cho tới stream game, chính là sự nâng cấp vượt bậc so với người tiền nhiệm i5-11400F.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (4,19,50,15,0,20000000,29490000,'Đóng vai trò là bộ não của GVN VIPER Plus i3060 - White Edition, MSI MAG B660M MORTAR WIFI DDR4 sở hữu những tính năng vượt trội cùng thiết kế nổi bật. Với các chi tiết như tấm tản nhiệt, khe M.2 được hoàn thiện với những đường nét tinh tế trắng và bạc nhám tạo nên vẻ ngoài bắt mắt. ',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (4,20,50,15,0,20000000,25490000,'Mainboard GIGABYTE B660M AORUS PRO AX DDR4 (rev. 1.0) là bo mạch chủ sử dụng chipset B660 của Intel, hỗ trợ vi xử lý mới nhất hiện nay - Intel Core thế hệ 12 với socket LGA 1700. Sở hữu một ngoại hình bắt mắt với những chi tiết được hoàn thiện với chất lượng cao.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (4,21,50,15,0,25000000,32790000,'Mở đầu cho sức của VIPER Plus i3070 sẽ là mainboard MSI MAG B660M MORTAR WIFI DDR4. Mang đến một ngoại hình mạnh mẽ với những chi tiết nhám bạc, MSI MAG B660M MORTAR WIFI góp phần tô điểm vào không gian gaming của những game thủ. Được trang bị thêm những công nghệ tiên tiến giúp tăng cường hiệu năng như Core Boost, Memory Boost, Lightning Gen 4 M.2,... MSI MAG B660M MORTAR WIFI sẽ “khai thác” mọi tiềm năng sức mạnh từ những linh kiện mới nhất hiện nay và đem lại trải nghiệm sử dụng mượt mà.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (5,23,50,15,0,5000000,8390000,'Đi cùng mainboard thế hệ mới, chắc chắn không thể bỏ qua dòng RAM “quốc dân” RAM Corsair Vengeance LPX 8GB bus 3000 với mức xung nhịp 3000 Mhz. Với thanh RAM 8GB máy thừa sức đáp ứng hầu hết những tác vụ cơ bản mà không gặp bất kỳ khó khăn gì. ',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (5,22,50,15,0,2000000,4990000,' Bộ PC được thiết kế dành riêng cho hầu hết các bạn học sinh, sinh viên và một số nhu cầu làm việc tại văn phòng. Ở một mức giá hợp lý với bộ linh kiện chất lượng bạn có thể thoải mái làm việc trên máy hoặc thỉnh thoảng giải trí với các tựa game online như: LOL, Dota 2, CSGO,...',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (5,24,50,15,0,5000000,7190000,'Bo mạch chủ ASUS nổi tiếng với quy trình sản xuất được giám sát kỹ lưỡng để mang đến cho người dùng sản phẩm chất lượng nhất. ASUS PRIME H510M-A WIFI là dòng sản phẩm thế hệ mới nhưng giá lại vô cùng phải chăng. Hỗ trợ chip Intel thế hệ 10, 11 mới nhất cùng những công nghệ tiên tiến. Đây đích thực là sự lựa chọn nếu bạn đang tìm cho mình một mẫu mainboard ngon - bổ - rẻ.  ',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (5,25,50,15,0,6000000,9590000,'Bo mạch chủ mà GVN Homework i5 đang sử dụng là B560M với 4 khe RAM, tức là về sau nếu có nhu cầu, bạn có thể mua thêm 1 thanh RAM 8GB để đủ thành 16GB RAM tiêu chuẩn hầu hết các tựa game hiện nay. Case PC cũng rất rộng rãi, bạn hoàn toàn có thể mua thêm nhiều ổ SSD, HDD, quạt hay thậm chí là các tản nhiệt cho CPU mà không sợ thiếu chỗ.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (5,26,50,15,0,3000000,5090000,'',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (5,27,50,15,0,6500000,9990000,'HP cho ra đời dòng sản phẩm máy bộ văn phòng nhỏ gọn hiệu năng cao và đáp ứng đầy đủ các nhu cầu của bạn khi sử dụng với các tác vụ văn phòng và đáp ứng nhu cầu văn phòng cơ bản với các tác vụ chủ yếu như soạn thảo văn bản, xem nội dung trực tuyến, hội họp hay xuất ra màn hình lớn với cổng HDMI hoặc hỗ trợ trình chiếu hội thảo và cả khả năng giải trí nhẹ nhàng. Trang bị sức mạnh của CPU Intel Core i3 thế hệ thứ 10, HP ProDesk 400 G6 Mini 60U52PA sẽ là tâm điểm mà GEARVN muốn dành cho bạn ngày hôm nay !',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (5,28,50,15,0,8900000,11590000,'Mini PC, sản phẩm máy tính nhỏ nhắn, xinh xắn dành cho những môi trường văn phòng chuyên nghiệp. Được dẫn đầu bởi 2 thương hiệu lớn là Intel với Intel NUC và Apple với Mac Mini, thị trường của mini PC đón chào một thành viên mới với cái tên ASUS Mini PC đến từ ASUS. Ra mắt chúng ta với sản phẩm ASUS Mini PC PN63-S1-B-S5025MV cùng thiết kế vẻ ngoài khác biệt.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (6,29,50,15,0,800000,1290000,'Logitech G335 là một trong những dòng tai nghe máy tính có nhiều màu sắc, mỗi màu lại có dây quai đeo hai mặt sống động. Phần dây quai đeo có thể dễ dàng tháo ra thay thế và vệ sinh - để chúng trông luôn mới.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (6,30,50,15,0,100000,1490000,'Chiếc tai nghe phủ đen này đem lại âm thanh mạnh mẽ và trong trẻo, đồng thời các mic tạo chùm giúp giảm tạp âm nền. Với trọng lượng chỉ 165g, G435 đủ nhẹ và thoải mái để đeo suốt ngày. G435 có thể phù hợp với rất nhiều người nhưng sẽ phù hợp hơn với những người có kích cỡ đầu khiêm tốn.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (6,31,50,15,0,2500000,2990000,'Logitech G733 LIGHTSPEED Wireless Black dòng tai nghe máy tính được thiết kế mang đến sự thoải mái cho game thủ. Đây là mẫu tai nghe không dây được trang bị âm thanh lập thể, các bộ lọc âm thanh và tính năng chiếu sáng tiên tiến bạn cần để nhìn, nói và chơi phong cách hơn bao giờ hết.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (6,32,50,15,0,2500000,2990000,'Chiếc tai nghe Logitech G Pro X League Of Legends được lấy cảm hứng từ những trang phục K/DA vô cùng ấn tượng với giới game thủ, bên cạnh những thiết kế vô cùng độc đáo thì siêu phẩm của nhà Logitech cũng được trang bị rất nhiều công năng tiên tiến, chất lượng âm thanh vượt trội đậm chất gaming trên dòng tai nghe máy tính của mình.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (6,33,50,15,0,1500000,1890000,'Tai nghe Razer Kraken X USB chỉ nặng 285g, thiết kế mỏng của tai nghe chơi game PC này được hỗ trợ bởi bộ ba yếu tố khiến nó trở nên gần như không trọng lượng. ',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (6,34,50,15,0,2500000,2950000,'Tai nghe máy tính với driver âm thanh độ chính xác cao thừa hưởng từ Arctis Pro, được tinh chỉnh để tối đa độ chính xác phù hợp với những trận game căng thẳng nhất. ',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (7,35,50,15,0,200000,490000,'',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (7,36,50,15,0,1300000,1590000,'Deco E4 là cách đơn giản nhất để đảm bảo tín hiệu Wi-Fi mạnh ở mọi góc trong nhà của bạn lên tới hơn 260 mét vuông. Các kết nối Wi-Fi và đường truyền Ethernet tùy chọn hoạt động cùng nhau để liên kết các thiết bị Deco, cung cấp tốc độ mạng nhanh hơn và vùng phủ sóng thực sự liền mạch. Muốn mở rộng vùng phủ sóng? Đơn giản chỉ cần thêm một Deco khác.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (7,37,50,15,0,1300000,1690000,'Bộ định tuyến Asus RT-AX1800HP được trang bị chuẩn WIFI 6 (802.11ax) mới nhất mang đến phạm vi phủ sóng tốt hơn cho ngôi nhà của chính bạn. Từ đó mọi vấn đề về kết nối mạng trên nhiều thiết bị cá nhân cũng được giải quyết với tốc độ nhanh hơn. ',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (7,38,50,15,0,2800000,3490000,'Bộ định tuyến WiFi 6 Asus RT-AX3000 chuẩn AX3000 được trang bị băng tần kép 2x2 mang lại băng thông 160MHz và 1024-QAM đem lại tốc độ mạng vượt trội so với những router WiFi khác. Và RT-AX3000 sở hữu công nghệ chuẩn WiFi 6 (802.11ax) kết hợp với băng tần kép, có khả năng cung cấp tốc độ mạng đạt khoảng 3000 Mbps - 574 Mbps ở băng tần 2.4GHz và 2402 Mbps ở băng tần còn lại là 5GHz. Một tốc độ vượt trội gấp 2.5 so với chuẩn WiFi cũ.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (7,39,50,15,0,5000000,5790000,'Sử dụng công nghệ WiFi thế hệ 6 (802.11ax) và 160MHz mới nhất giúp tăng tốc băng thông cực nhanh lên đến 5400 Mbps. Từ đó giúp kết nối mạng nhanh chóng, ổn định mang lại trải nghiệm chơi game, giải trí, làm việc tốt hơn bao giờ hết.',GETDATE())
+INSERT INTO product(category_id, product_name_id, quantity,
+quantity_sold, is_available, buy_price, price, information, created_at)
+VALUES (7,40,50,15,0,1000000,1590000,'Số lượng thiết bị cá nhân và IoT được kết nối ngày càng tăng đã dẫn đến sự gia tăng tổng thể về mật độ mạng để rồi thúc đẩy nâng cao giới hạn của chuẩn WiFi hiện tại. Chuẩn 802.11ax mới nhất cung cấp các công nghệ trong tương lai, hiệu quả mạng cao hơn, tốc độ WiFi nhanh hơn, vùng phủ sóng lớn hơn và thời lượng pin được cải thiện cho các thiết bị được kết nối, mang lại cho người dùng trải nghiệm mạng tốt hơn đáng kể.*Cần các thiết bị tương thích 802.11ax để tận hưởng các ưu điểm của chuẩn WiFi 802.11ax.',GETDATE())
+
+DBCC CHECKIDENT ('[order_detail]', RESEED, 0);
+GO
+
+INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(1, 22, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(1, 24, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(1, 28, GETDATE())
+			INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(1, 33, GETDATE())
+			INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(1, 37, GETDATE())
+				INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(2, 15, GETDATE())
+				INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(2, 23, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(2, 25, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(2, 28, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(2, 34, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(2, 38, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(3, 16, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(3, 23, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(3, 26, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(3, 29, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(3, 35, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(3, 39, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(4, 12, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(4, 23, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(4, 25, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(4, 28, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(4, 36, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(4, 39, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(5, 22, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(5, 24, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(5, 29, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(5, 33, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(5, 37, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(6, 16, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(6, 21, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(6, 24, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(6, 29, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(6, 32, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(6, 40, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(7, 11, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(7, 21, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(7, 24, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(7, 33, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(7, 41, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(8, 21, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(8, 24, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(8, 31, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(8, 33, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(8, 40, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(9, 33, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(9, 40, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(10, 14, GETDATE())	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(10, 22, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(10, 29, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(10, 32, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(10, 38, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(11, 20, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(11, 22, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(11, 29, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(11, 32, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(11, 38, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(12, 12, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(12, 21, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(12, 29, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(12, 32, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(12, 41, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(13, 30, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(13, 33, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(13, 39, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(14, 30, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(14, 34, GETDATE())INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(14, 39, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(15, 30, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(15, 34, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(15, 39, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(16, 30, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(16, 34, GETDATE())INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(16, 39, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(17, 23, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(17, 25, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(17, 31, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(17, 39, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(17, 42, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(17, 49, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(17, 51, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(18, 23, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(18, 26, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(18, 39, GETDATE())	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(18, 42, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(18, 49, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(18, 52, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(19, 23, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(19, 25, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(19, 31, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(19, 36, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(19, 39, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(19, 42, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(19, 46, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(19, 50, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(19, 53, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(20, 23, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(20, 25, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(20, 28, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(20, 34, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(20, 39, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(20, 42, GETDATE())
+			INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(21, 23, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(21, 25, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(21, 28, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(21, 34, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(21, 39, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(21, 42, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(22, 21, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(22, 24, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(22, 28, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(22, 33, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(22, 41, GETDATE())INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(22, 43, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(23, 21, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(23, 24, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(23, 28, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(23, 33, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(23, 43, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(23, 47, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(23, 54, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(24, 21, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(24, 24, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(24, 28, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(24, 33, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(24, 37, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(24, 44, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(24, 47, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(25, 22, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(25, 24, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(25, 29, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(25, 35, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(25, 41, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(25, 44, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(25, 47, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(25, 54, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(26, 22, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(26, 28, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(26, 33, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(26, 37, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(26, 45, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(26, 47, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(26, 52, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(27, 17, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(27, 21, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(27, 28, GETDATE())
+
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(27, 36, GETDATE())
+	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(27, 39, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(27, 46, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(27, 47, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(27, 53, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(28, 11, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(28, 22, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(28, 24, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(28, 28, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(28, 33, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(28, 39, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(28, 44, GETDATE())	INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(28, 48, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(28, 53, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(29, 56, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(30, 55, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(31, 55, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(31, 55, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(32, 55, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(33, 56, GETDATE())
+		INSERT INTO product_properties
+	(product_id, properties_id, created_at)
+	VALUES
+	(34, 56, GETDATE())
+	
+	
+	INSERT INTO staff VALUES ('thinhle',0,'1234','2005-01-01 00:00:00',null,null)
+	INSERT INTO staff VALUES ('abc',1,'1234','2005-01-01 00:00:00',null,null)
+	INSERT INTO staff VALUES ('cdf',1,'1234','2005-01-01 00:00:00',null,null)
+	INSERT INTO staff VALUES ('efg',1,'1234','2005-01-01 00:00:00',null,null)
+		
+	INSERT INTO [order] VALUES (1,1,'2008-11-11 10:10:00',null)
+	INSERT INTO [order] VALUES (2,2,'2008-11-11 10:10:00',null)
+	INSERT INTO [order] VALUES (3,3,'2008-11-11 10:10:00',null)
+	INSERT INTO [order] VALUES (4,4,'2008-11-11 10:10:00',null)
+	INSERT INTO [order] VALUES (5,2,'2008-11-11 10:10:00',null)
+	INSERT INTO [order] VALUES (6,3,'2008-11-11 10:10:00',null)
+	
+	INSERT INTO order_detail VALUES (1,1,3,'2008-11-11 10:10:00',null)
+
+--
+--
+-- PARAMETERS SP
+--
+--
+
+insertProductName(name)
+insertProduct(category_id , product_name_id, quantity, is_available, buy_price, price, information)
+insertStaff(name, level, password)
+insertOrder(staff_id, order_number)
+insertOrderDetail(order_id, product_id, quantity)
+insertCategory(name)
+insertProperties(name, parent_id)
+insertProductProperties(product_id, properties_id)
+insertImage(product_name_id, name)
+
+updateProductName(name, id)
+updateProduct(category_id, product_name_id, quantity, quantity_sold, is_available, buy_price, price, information, id)
+updateProductQuantitySold(quantity_sold, id)
+updateStaff(name, level, password, id)
+updateOrder(order_number, id)
+updateOrderDetail(order_id, product_id, quantity, id)
+updateCategory(name, id)
+updateProperties(name, parent_id, id)
+updateProductProperties(product_id, properties_id, id)
+updateImage(product_name_id, name, id)
+
+deleteStatement(tableName, id)
+

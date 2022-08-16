@@ -1,0 +1,330 @@
+package helper.loc;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+import javax.swing.JLabel;
+import javax.swing.JTextField;
+
+import com.toedter.calendar.JDateChooser;
+
+import dao.ProductNameDao;
+import dao.ProductPropertiesDao;
+import dao.PropertiesDao;
+import entity.Product;
+import entity.ProductName;
+import entity.ProductProperties;
+import entity.Properties;
+import helper.HelperFunction;
+import helper.Validation;
+
+public class CrudValidate {
+	public static boolean nameValidate(JTextField tf, JLabel lbl) {
+		boolean validate = false;
+		if(!Validation.isEmptyValidate(tf)) {
+			if(!Validation.isNumber(tf) && Validation.stringLengthValidate(tf, 100)) {
+				lbl.setText("");
+				validate = true;
+			}else {
+				lbl.setText("<html>");
+				if(Validation.isNumber(tf)) {
+					lbl.setText(lbl.getText() + "*Must not contain only number<br/>");
+				}
+
+				if(!Validation.stringLengthValidate(tf, 100)) {
+					lbl.setText(lbl.getText() + "*Must less than 100 characters<br/>");
+				}
+
+				lbl.setText(lbl.getText() + "</html>");	
+			}
+		}else {
+			lbl.setText("*Please enter name");
+		}
+		return validate;
+	}
+	
+	
+	//============================
+	//============================Product name CRUD
+	//============================
+	
+	public static boolean isProductNameUnique(JTextField tf, List<ProductName> proList, ProductName pro) {
+		boolean isUnique = false;
+		if(proList.size() != 0) {
+			//if pro == null => this is an insert command
+			//the second phase is for update command => check if the user input the same name as the updated product-name's when use update
+			if(pro == null || !pro.getName().toLowerCase().equals(tf.getText().toLowerCase())) {
+				//since this is an insert command or the update command(but the user input a different name) => check if the input name is unique
+				for(var proName : proList) {
+					if(proName.getName().toLowerCase().equals(tf.getText().toLowerCase())) {
+						//if condition is true => not unique
+						isUnique = false;
+						break;
+					}else {
+						isUnique = true;	
+					}
+
+				}
+				
+				
+//				Another way to code, can replace to the loop above
+//				isUnique = proList.stream().anyMatch(element -> element.getName().toLowerCase().equals(tf.getText().toLowerCase()));
+				
+			}else {
+				//since this is not an insert command and the user input the same name as the update product-name's 
+				//=> that mean the name is always unique because it doesnt change at all
+				isUnique = true;
+			}
+		}else {
+			isUnique = true;
+		}
+		return isUnique;
+	}
+	
+	public static boolean isProductNameContainProduct(int id, List<Product> proList, JLabel lbl) {
+		boolean validate = false;
+		for(var pro : proList) {
+			if(pro.getId() == id) {
+				lbl.setText("*Product-name got product!");
+				validate = true;
+				break;
+			}
+		}
+		
+//		Another way to code, can replace to the loop above
+//		if(proList.stream().anyMatch(element -> element.getId() == id)) {
+//			lbl.setText("*Product-name got product!");
+//			validate = true;
+//		}
+		
+		
+		return validate;
+	}
+	
+	
+	//============================
+	//============================Properties CRUD
+	//============================
+	
+	public static boolean isPropertiesUnique(JTextField tf, List<Properties> proList, Properties pro) {
+		boolean isUnique = false;
+		if(proList.size() != 0) {
+		//if pro == null => this is an insert command
+		//the second condition is for update command => check if the user input the same name as the updated property's when use update
+		if(pro == null || !pro.getName().toLowerCase().equals(tf.getText().toLowerCase())) {
+			//since this is an insert command or the update command(but the user input a different name) => check if the input name is unique
+			for(var proName : proList) {
+				if(proName.getName().toLowerCase().equals(tf.getText().toLowerCase())) {
+					//if condition is true => not unique
+					isUnique = false;
+					break;
+				}else {
+					isUnique = true;	
+				}
+
+			}
+			
+//			Another way to code, can replace to the loop above
+//			if(proList.stream().anyMatch(element -> element.getName().toLowerCase().equals(tf.getText().toLowerCase()))) {
+//				isUnique = false;
+//			}else {
+//				isUnique = true;	
+//			}
+			
+			
+		}else {
+			//since this is not an insert command and the user input the same name as the update product-name's 
+			//=> that mean the name is always unique because it doesnt change at all
+			isUnique = true;
+		}}else {
+			isUnique = true;
+		}
+		return isUnique;
+	}
+	
+	public static boolean isPropertiesContainRootProperties(List<Properties> proList, JLabel lbl, String message) {
+		boolean validate= false;
+		for(var pro : proList) {
+			//check if the list of properties contain root property
+			if(pro.getParentId() == 0) {
+				validate = true;
+				lbl.setText(message);
+				break;
+			}
+		}
+		
+//		Another way to code, can replace to the loop above
+//		if(proList.stream().anyMatch(element -> element.getParentId() == 0)) {
+//			validate = true;
+//			lbl.setText(message);
+//		}
+		
+		return validate;
+	}
+	
+	public static boolean isPropertiesContainChild(int id, List<Properties> proList, JLabel lbl) {
+		boolean validate = false;
+		for(var property : proList) {
+			//check if the property contain child properties
+			if(property.getParentId() == id) {
+				lbl.setText("<html>*This property contain child<br/> element!</html>");
+				validate = true;		
+				break;
+			}				
+			
+		}
+		return validate;
+	}
+	
+	public static boolean isPropertiesContainPp(int id, JLabel lbl) {
+		//This is for when you want to check if a property contain product-properties
+		boolean validate = false;
+		var dao = new ProductPropertiesDao();
+		for(var element : dao.getDb()) {
+			if(element.getPropertiesId() == id) {
+				lbl.setText("<html>*The property is being<br/> used elsewhere!</html>");
+				validate = true;
+				break;
+			}
+		}
+		
+		return validate;
+	}
+	
+	public static boolean isPropertiesContainPp(List<Integer> ids, JLabel lbl) {
+		//This is for when you want to check if a list of properties contain product-properties
+		boolean validate = false;
+		var dao = new ProductPropertiesDao();
+		for(var element : dao.getDb()) {
+			for(var id : ids) {
+				if(element.getPropertiesId() == id) {
+					lbl.setText("<html>*The property is being<br/> used elsewhere!</html>");
+					validate = true;
+					break;
+				}
+			}
+		}
+		
+		return validate;		
+	}
+	
+	//============================
+	//============================Product Crud
+	//============================
+	
+	public static boolean isProductContainOd(int id, JLabel lbl) {
+		//This is for when you want to check if a product contain order detail
+		boolean validate = false;
+		for(var element : HelperFunction.getOrderDetailDb()) {
+			if(element.getProductId() == id) {
+				validate = true;
+				lbl.setText("<html>*The product is being<br/> used elsewhere</html>");
+				break;
+			}
+		}
+		return validate;
+	}
+	
+	public static boolean isProductContainOd(List<Integer> ids, JLabel lbl) {
+		//This is for when you want to check if a list of product contain order detail
+		boolean validate = false;
+
+		for(var element : HelperFunction.getOrderDetailDb()) {
+			for(var id : ids) {
+				if(element.getProductId() == id) {
+					lbl.setText("<html>*The product is being<br/> used elsewhere!</html>");
+					validate = true;
+					break;
+				}
+			}
+		}
+		
+		return validate;		
+	}
+	
+	public static boolean isProductContainPp(int id, JLabel lbl) {
+		//This is for when you want to check if a product contain properties
+		boolean validate = false;
+		var dao = new ProductPropertiesDao();
+		for(var element : dao.getDb()) {
+			if(element.getProductId() == id) {
+				lbl.setText("<html>*The product is being<br/> used elsewhere!</html>");
+				validate = true;
+				break;
+			}
+		}
+		
+		return validate;
+	}
+	
+	public static boolean isProductContainPp(List<Integer> ids, JLabel lbl) {
+		//This is for when you want to check if a list of product contain properties
+		boolean validate = false;
+		var dao = new ProductPropertiesDao();
+		for(var element : dao.getDb()) {
+			for(var id : ids) {
+				if(element.getProductId() == id) {
+					lbl.setText("<html>*The product is being<br/> used elsewhere!</html>");
+					validate = true;
+					break;
+				}
+			}
+		}
+		
+		return validate;		
+	}
+	
+	//============================
+	//============================Product-properties crud
+	//============================
+	
+	public static boolean isChoosenPropertyDuplicate(Properties pro, List<ProductProperties> ppList, JLabel lbl) {
+		
+		boolean validate = false;
+		for(var pp : ppList) {
+			if(pp.getPropertiesId() == pro.getId()) {
+				lbl.setText("*Duplicate property");
+				validate = true;
+				break;
+			}
+		}
+		return validate;
+	}
+	
+	public static boolean isChoosenPropertyUnique(Properties pro, List<ProductProperties> ppList, JLabel lbl) {
+		boolean validate = false;
+		if(ppList.size() != 0) {				
+				var dao = new PropertiesDao();
+				List<Properties> proList = new ArrayList<Properties>();
+	
+				//get the properties list that belong to the product
+				for(var pp : ppList) {
+					for(var property : dao.getDb()) {
+						if(pp.getPropertiesId() == property.getId()) {
+							proList.add(property);
+						}
+					}
+				}
+
+				//from the properties list, loop through and compare parent-id to the input property to see if there are 
+				//2 child properties of the same root property
+
+				for(var property : proList) {
+					if(property.getParentId() == pro.getParentId()) {
+						lbl.setText("<html>*There can be only one choosen child property<br/> per parent property</html>");
+						validate = false;
+						break;
+					}else {
+						validate = true;
+					}
+				}
+
+		}else {
+			validate = true;
+		}
+
+		return validate;
+	}
+	
+}

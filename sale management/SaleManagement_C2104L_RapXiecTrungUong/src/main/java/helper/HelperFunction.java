@@ -1,0 +1,421 @@
+package helper;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JTable;
+
+import common.SqlConnection;
+import dao.ImageDao;
+import dao.ProductDao;
+import dao.ProductNameDao;
+import dao.ProductPropertiesDao;
+import dao.PropertiesDao;
+import entity.Category;
+import entity.Image;
+import entity.OrderDetail;
+import entity.Product;
+import entity.ProductName;
+import entity.ProductProperties;
+import entity.Properties;
+
+public class HelperFunction {
+	public static String getIdsString(JTable table) {
+		//get selected ids from table and convert it into string
+		String id = "";
+		for(int i = 0; i < table.getRowCount(); i++) {
+			if((Boolean)table.getValueAt(i, table.getColumnCount()-1)) {
+				id += table.getValueAt(i, 0).toString() + ",";
+			}
+		}
+
+		id = id.substring(0, id.length()-1);
+		return id;
+	}
+	
+	public static String getAllIdsString(JTable table) {
+		//get all ids from table and convert it into string
+		String id = "";
+		for(int i = 0; i < table.getRowCount(); i++) {			
+			id += table.getValueAt(i, 0).toString() + ",";
+		}
+
+		id = id.substring(0, id.length()-1);
+		return id;
+	}
+	
+	public static List<Integer> getIdsList(JTable table) {
+		//get selected ids from table and convert it into list
+		List<Integer> id = new ArrayList<>();
+		for(int i = 0; i < table.getRowCount(); i++) {
+			if((Boolean)table.getValueAt(i, table.getColumnCount()-1)) {
+				id.add(Integer.parseInt(table.getValueAt(i, 0).toString()));
+			}
+		}
+		return id;
+	}
+	
+	public static List<Integer> getAllIdsList(JTable table) {
+		//get all ids from table and convert it into string
+		List<Integer> id = new ArrayList<>();
+		for(int i = 0; i < table.getRowCount(); i++) {			
+			id.add(Integer.parseInt(table.getValueAt(i, 0).toString()));
+		}
+		return id;
+	}
+	
+	
+	public static int getId(JTable table) {
+		//get one id from the selected row
+		int id = -1;
+		for(int i = 0; i < table.getRowCount(); i++) {
+			if((Boolean)table.getValueAt(i, table.getColumnCount()-1)) {
+				id = Integer.parseInt(table.getValueAt(i, 0).toString());
+				break;
+			}
+		}
+		return id;
+	}
+	
+	public static List<String> getColumnList(String tableName) {
+		List<String> columnList = new ArrayList<String>();
+		try (
+			Connection con = DriverManager.getConnection(SqlConnection.getConnectionString());
+			PreparedStatement ps = con.prepareStatement("SELECT * FROM " + tableName);
+			ResultSet result = ps.executeQuery();
+		) {
+			int columnCount = result.getMetaData().getColumnCount();
+			for(int i = 1; i<= columnCount; i++) {
+				columnList.add(result.getMetaData().getColumnName(i));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		columnList.remove(columnList.size()-1);
+		return columnList;
+	}
+	
+	//============================
+	//============================Product name
+	//============================
+	
+	public static ProductName getProductName(int id, ProductNameDao dao) {
+//		var pro = new ProductName();
+//		for (var product : dao.getDb()) {
+//			if(product.getId() == id) {
+//				pro = product;
+//				break;
+//			}
+//		}
+		
+		var productName = dao.getDb().stream()
+								.filter(element -> element.getId()==id)
+								.findFirst()
+								.get();
+
+		
+		return productName;
+	}
+	
+	public static ProductName getProductName(int id) {
+		var dao = new ProductNameDao();
+//		var pro = new ProductName();
+//		for (var product : dao.getDb()) {
+//			if(product.getId() == id) {
+//				pro = product;
+//				break;
+//			}
+//		}
+		
+		var productName = dao.getDb().stream()
+				.filter(element -> element.getId()==id)
+				.findFirst()
+				.get();
+		return productName;
+	}
+	
+	//============================
+	//============================Properties 
+	//============================
+	
+	public static Properties getProperties(int id, PropertiesDao dao) {
+//		var pro = new Properties();
+//		for (var properties : dao.getDb()) {
+//			if(properties.getId() == id) {
+//				pro = properties;
+//				break;
+//			}
+//		}
+		
+		var properties = dao.getDb().stream()
+				.filter(element -> element.getId()==id)
+				.findFirst()
+				.get();
+		
+		return properties;
+	}
+	
+	public static Properties getProperties(int id) {
+		var dao = new PropertiesDao();
+//		var pro = new Properties();
+//		for (var properties : dao.getDb()) {
+//			if(properties.getId() == id) {
+//				pro = properties;
+//				break;
+//			}
+//		}
+		
+		var properties = dao.getDb().stream()
+				.filter(element -> element.getId()==id)
+				.findFirst()
+				.get();
+		
+		return properties;
+	}
+	
+	public static List<Properties> getSelectedProperties(List<Integer> ids, List<Properties> proList){
+		List<Properties> selectedList = new ArrayList<Properties>();
+		for(var pro : proList) {
+			innerloop:
+			for(var id : ids) {
+				if(pro.getId() == id) {
+					selectedList.add(pro);				
+					break innerloop;
+				}				
+			}
+			
+			
+//			Another ways to do the loop
+//			ids.stream()
+//				.filter(element -> element == pro.getId())
+//				.findFirst()
+//				.ifPresent(result -> selectedList.add(pro));
+			
+		}
+
+		return selectedList;
+	}
+	
+
+	
+	//============================
+	//============================Image
+	//============================
+	
+	public static Image getImage(int id, ImageDao dao) {
+//		var img = new Image();
+//		for (var image : dao.getDb()) {
+//			if(image.getId() == id) {
+//				img = image;
+//				break;
+//			}
+//		}
+		
+		var img = dao.getDb().stream()
+				.filter(element -> element.getId()==id)
+				.findFirst()
+				.get();
+		
+		return img;
+	}
+
+	public static List<Image> getSelectedImages(List<Integer> ids, List<Image> imgList){
+		List<Image> selectedList = new ArrayList<Image>();
+		for(var img : imgList) {
+			innerloop:
+			for(var id : ids) {
+				if(img.getId() == id) {
+					selectedList.add(img);				
+					break innerloop;
+				}				
+			}
+			
+//			Another ways to do the loop
+//			ids.stream()
+//				.filter(element -> element == img.getId())
+//				.findFirst()
+//				.ifPresent(result -> selectedList.add(img));
+		}
+
+		return selectedList;
+	}
+	
+	//============================
+	//============================Category
+	//============================
+	
+	public static Category getCategory(int id) {
+		List<Category> list = new ArrayList<Category>();
+		var getCate = new Category();
+		try (
+			Connection con = DriverManager.getConnection(SqlConnection.getConnectionString());
+			PreparedStatement ps = con.prepareStatement("SELECT * FROM category");
+			ResultSet result = ps.executeQuery();
+		) {
+			while(result.next()) {
+				if(result.getTimestamp("deleted_at")==null) {
+					list.add(new Category(result.getInt("id"), 
+						result.getString("name"), 
+						result.getTimestamp("created_at")!=null? result.getTimestamp("created_at").toLocalDateTime() : null, 
+						result.getTimestamp("updated_at")!=null? result.getTimestamp("updated_at").toLocalDateTime() : null, 
+						result.getTimestamp("deleted_at")!=null? result.getTimestamp("deleted_at").toLocalDateTime() : null));
+				}
+				
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		for(var category : list) {
+			if(category.getId() == id) {
+				getCate = category;
+				break;
+			}
+		}
+		return getCate;
+	}
+	
+	public static List<Category> getCategoryDb(){
+		List<Category> list = new ArrayList<Category>();
+
+		try (
+			Connection con = DriverManager.getConnection(SqlConnection.getConnectionString());
+			PreparedStatement ps = con.prepareStatement("SELECT * FROM category");
+			ResultSet result = ps.executeQuery();
+		) {
+			while(result.next()) {
+				if(result.getTimestamp("deleted_at")==null) {
+					list.add(new Category(result.getInt("id"), 
+						result.getString("name"), 
+						result.getTimestamp("created_at")!=null? result.getTimestamp("created_at").toLocalDateTime() : null, 
+						result.getTimestamp("updated_at")!=null? result.getTimestamp("updated_at").toLocalDateTime() : null, 
+						result.getTimestamp("deleted_at")!=null? result.getTimestamp("deleted_at").toLocalDateTime() : null));
+				}
+				
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return list;
+	}
+	
+	//============================
+	//============================Order Detail
+	//============================
+	
+	public static List<OrderDetail> getOrderDetailDb(){
+		List<OrderDetail> list = new ArrayList<OrderDetail>();
+
+		try (
+			Connection con = DriverManager.getConnection(SqlConnection.getConnectionString());
+			PreparedStatement ps = con.prepareStatement("SELECT * FROM order_detail");
+			ResultSet result = ps.executeQuery();
+		) {
+			
+
+			while(result.next()) {
+				list.add(new OrderDetail(
+						result.getInt("id"), 
+						result.getInt("order_id"),
+						result.getInt("product_id"),
+						result.getInt("quantity"),
+						result.getTimestamp("created_at")!=null? result.getTimestamp("created_at").toLocalDateTime() : null, 
+						result.getTimestamp("updated_at")!=null? result.getTimestamp("updated_at").toLocalDateTime() : null));
+
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return list;
+	}
+	
+	//============================
+	//============================Product
+	//============================
+	
+	public static Product getProduct(int id) {
+		var dao = new ProductDao();
+//		var pro = new Product();
+//		for (var product : dao.getDb()) {
+//			if(product.getId() == id) {
+//				pro = product;
+//				break;
+//			}
+//		}
+		
+		var product = dao.getDb().stream()
+				.filter(element -> element.getId()==id)
+				.findFirst()
+				.get();
+		
+		return product;
+	}
+	
+	public static List<Product> getSelectedProducts(List<Integer> ids, List<Product> proList){
+		List<Product> selectedList = new ArrayList<Product>();
+		for(var pro : proList) {
+			innerloop:
+			for(var id : ids) {
+				if(pro.getId() == id) {
+					selectedList.add(pro);				
+					break innerloop;
+				}				
+			}
+			
+//			Another ways to do the loop
+//			ids.stream()
+//				.filter(element -> element == pro.getId())
+//				.findFirst()
+//				.ifPresent(result -> selectedList.add(pro));
+		}
+
+		return selectedList;
+	}
+	
+	//============================
+	//============================Product-properties
+	//============================
+	
+	public static ProductProperties getProductProperties(int id, ProductPropertiesDao dao) {
+//		var pro = new ProductProperties();
+//		for (var pp : dao.getDb()) {
+//			if(pp.getId() == id) {
+//				pro = pp;
+//				break;
+//			}
+//		}
+		
+		var pp = dao.getDb().stream()
+				.filter(element -> element.getId()==id)
+				.findFirst()
+				.get();
+		
+		return pp;
+	}
+	
+	public static ProductProperties getProductProperties(int id) {
+		var dao = new ProductPropertiesDao();
+//		var pro = new ProductProperties();
+//		for (var pp : dao.getDb()) {
+//			if(pp.getId() == id) {
+//				pro = pp;
+//				break;
+//			}
+//		}
+		
+		var pp = dao.getDb().stream()
+				.filter(element -> element.getId()==id)
+				.findFirst()
+				.get();
+		
+		return pp;
+	}
+	
+}
