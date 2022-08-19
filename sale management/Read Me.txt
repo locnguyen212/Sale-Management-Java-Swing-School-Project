@@ -1,0 +1,11 @@
+Role involve: This is the list of classes that i develop in the project
+
+package(find in src/main/java):
+   - gui.image : all classes inside
+   - gui.product : all classes inside
+   - gui.productName : all classes inside
+   - gui.properties : all classes inside
+   - gui.productProperties : all classes inside
+   - helper.loc : all classes inside
+   - dao : ImageDao, ProductDao, ProductPropertiesDao, PropertiesDao, ProductNameDao
+   - helper : HelperFunction	   
